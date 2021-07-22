@@ -89,9 +89,9 @@ for SELECT and EXEC if the stored procedure is meant to return something.
     def execute(self, sqlStmt: str, params: list = None, commit: bool = True):
         """
 Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, and EXEC commands where no results are expected to be returned.
-        :param commit:
-        :param sqlStmt:
-        :param params:
+        :param commit: Commits the changes in the database if True
+        :param sqlStmt: The code to run
+        :param params: Any parameters, substitute for question marks ('?') in the sqlStmt
         """
         if params:
             newSqlStmt = ''
