@@ -1,3 +1,4 @@
+import time
 import pymssql
 
 
@@ -92,7 +93,7 @@ for SELECT and EXEC if the stored procedure is meant to return something.
         cursor.close()
         return Response(res)
 
-    def execute(self, sqlStmt: str, params: list = None, commit: bool = True):
+    def execute(self, sqlStmt: str, params: list = None, commit: bool = True, timeout_seconds=100):
         """
 Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, and EXEC commands where no results are expected to be returned.
         :param commit: Commits the changes in the database if True
@@ -116,6 +117,14 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
             self._cursor.execute(new_sql_stmt, *params)
         else:
             self._cursor.execute(new_sql_stmt)
+
+        slept_times = 0
+        while self._cursor.nextset():
+            if (slept_times / 10) >= timeout_seconds:
+                break
+            time.sleep(0.1)
+            slept_times += 1
+
         if commit:
             self._conn.commit()
 
