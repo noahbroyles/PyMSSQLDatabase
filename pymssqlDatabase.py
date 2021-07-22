@@ -116,4 +116,3 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
     def close(self):
         self._conn.commit()
         self._conn.close()
-        del self
