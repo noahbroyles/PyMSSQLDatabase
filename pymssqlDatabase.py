@@ -10,17 +10,17 @@ class Iter(type):
 class Row:
     def __init__(self, data: dict):
         self._data: dict = data
-        self._listData = [[k, v] for k, v in self._data.items()]
+        self._listed_data = [[k, v] for k, v in self._data.items()]
 
     def get(self, key):
         return self.__getattr__(key)
 
     def __getitem__(self, item):
-        return self._listData[item][1]
+        return self._listed_data[item][1]
 
     def __setitem__(self, key, value):
-        self._listData[key][1] = value
-        self._data = {t[0]: t[1] for t in self._listData}
+        self._listed_data[key][1] = value
+        self._data = {t[0]: t[1] for t in self._listed_data}
 
     @classmethod
     def classiter(cls):
@@ -30,15 +30,18 @@ class Row:
         return len(self._data)
 
     def __getattr__(self, key):
-        return self._data.get(key, False)
+        return self._data.get(key)
+
+    def __str__(self) -> str:
+        return str(self._data)
 
 
 class Response:
     _rows = None
 
-    def __init__(self, dictResponse: list):
-        self._baseDB_data: list = dictResponse
-        self._rows = [Row(d) for d in self._baseDB_data]
+    def __init__(self, response: list):
+        self._base_data: list = response
+        self._rows = [Row(d) for d in self._base_data]
 
     @classmethod
     def classiter(cls):
@@ -51,12 +54,15 @@ class Response:
     def __getitem__(self, key: int):
         return self._rows[key]
 
+    def __str__(self) -> str:
+        return str([str(row) for row in self._rows])
+
 
 class Database:
 
-    def __init__(self, server: str, database: str, dbUsername: str, password: str):
+    def __init__(self, server: str, database: str, username: str, password: str):
 
-        self._conn = pymssql.connect(server, dbUsername, password, database)
+        self._conn = pymssql.connect(server, username, password, database)
         self._cursor = self._conn.cursor(as_dict=True)
 
     def query(self, sqlQuery: str, params: list = None):
@@ -67,19 +73,19 @@ for SELECT and EXEC if the stored procedure is meant to return something.
         :param params: A list of parameter values to substitute for ?'s in the query
         """
         if params:
-            newSqlQuery = ''
+            new_sql_query = ''
             for i in range(len(sqlQuery)):
                 if sqlQuery[i] == '?':
-                    newSqlQuery += '%s'
+                    new_sql_query += '%s'
                 else:
-                    newSqlQuery += sqlQuery[i]
+                    new_sql_query += sqlQuery[i]
         else:
-            newSqlQuery = sqlQuery
+            new_sql_query = sqlQuery
 
         cursor = self._conn.cursor(as_dict=True)
 
         if params:
-            cursor.execute(newSqlQuery, tuple(params))
+            cursor.execute(new_sql_query, tuple(params))
         else:
             cursor.execute(sqlQuery)
         res = cursor.fetchall()
@@ -94,22 +100,22 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         :param params: Any parameters, substitute for question marks ('?') in the sqlStmt
         """
         if params:
-            newSqlStmt = ''
+            new_sql_stmt = ''
             for i in range(len(sqlStmt)):
                 if sqlStmt[i] == '?':
-                    newSqlStmt += '%s'
+                    new_sql_stmt += '%s'
                 else:
-                    newSqlStmt += sqlStmt[i]
+                    new_sql_stmt += sqlStmt[i]
         else:
-            newSqlStmt = sqlStmt
+            new_sql_stmt = sqlStmt
 
         # with open('C:/bestnest_com/web/3PL/query.sql', 'w') as qf:
         #     qf.write(newSqlStmt)
 
         if params:
-            self._cursor.execute(newSqlStmt, *params)
+            self._cursor.execute(new_sql_stmt, *params)
         else:
-            self._cursor.execute(newSqlStmt)
+            self._cursor.execute(new_sql_stmt)
         if commit:
             self._conn.commit()
 
