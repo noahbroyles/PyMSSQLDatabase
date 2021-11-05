@@ -12,12 +12,6 @@ except KeyError:
     DBHOST, DBUSER, DBPASSWD, DATABASE = None, None, None, None
 
 
-class Iter(type):
-    def __iter__(self):
-        # Wanna iterate over a class? Then ask that damn class for an iterator!
-        return self.classiter()
-
-
 class Row:
     def __init__(self, data: dict):
         self._data: dict = data
@@ -69,10 +63,8 @@ class Response:
         return str([str(row) for row in self._rows])
 
 
-
 def _chunker(seq: list, size: int):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
 
 
 class Database:
@@ -113,7 +105,6 @@ for SELECT and EXEC if the stored procedure is meant to return something.
         res = cursor.fetchall()
         cursor.close()
         return Response(res)
-
 
     def execute_proc(self, procCode: str, params: list, commit: bool = False, convert_blanks_to_nulls: bool = True, timeout_seconds: int = 200):
         """
@@ -172,7 +163,6 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
 
         if commit:
             self._connection.commit()
-
 
     def execute_many(self, sqlStmt: str, multipleParams: list, fast: bool = False, commit: bool = False, convert_blanks_to_nulls: bool = True):
         cursor = self._connection.cursor()
