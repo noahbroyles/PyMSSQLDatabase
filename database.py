@@ -88,12 +88,6 @@ for SELECT and EXEC if the stored procedure is meant to return something.
         """
         if params:
             new_sql_query = sqlQuery.replace('?', '%s')
-            # new_sql_query = ''
-            # for i in range(len(sqlQuery)):
-            #     if sqlQuery[i] == '?':
-            #         new_sql_query += '%s'
-            #     else:
-            #         new_sql_query += sqlQuery[i]
         else:
             new_sql_query = sqlQuery
 
@@ -121,7 +115,7 @@ Run a stored procedure in the database and wait for it to finish
         if params:
             if convert_blanks_to_nulls:
                 params = [p if p != "" else None for p in params]
-            cursor.execute(procCode.replace('?', '%s'), *params)
+            cursor.execute(procCode.replace('?', '%s'), tuple(params))
         else:
             cursor.execute(procCode)
 
@@ -153,7 +147,7 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         if params:
             if convert_blanks_to_nulls:
                 params = [p if p != "" else None for p in params]
-            self._cursor.execute(new_sql_stmt, *params)
+            self._cursor.execute(new_sql_stmt, tuple(params))
         else:
             self._cursor.execute(new_sql_stmt)
 
