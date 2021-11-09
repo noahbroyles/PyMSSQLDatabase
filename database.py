@@ -87,12 +87,13 @@ for SELECT and EXEC if the stored procedure is meant to return something.
         :param params: A list of parameter values to substitute for ?'s in the query
         """
         if params:
-            new_sql_query = ''
-            for i in range(len(sqlQuery)):
-                if sqlQuery[i] == '?':
-                    new_sql_query += '%s'
-                else:
-                    new_sql_query += sqlQuery[i]
+            new_sql_query = sqlQuery.replace('?', '%s')
+            # new_sql_query = ''
+            # for i in range(len(sqlQuery)):
+            #     if sqlQuery[i] == '?':
+            #         new_sql_query += '%s'
+            #     else:
+            #         new_sql_query += sqlQuery[i]
         else:
             new_sql_query = sqlQuery
 
@@ -120,7 +121,7 @@ Run a stored procedure in the database and wait for it to finish
         if params:
             if convert_blanks_to_nulls:
                 params = [p if p != "" else None for p in params]
-            cursor.execute(procCode, *params)
+            cursor.execute(procCode.replace('?', '%s'), *params)
         else:
             cursor.execute(procCode)
 
@@ -136,21 +137,16 @@ Run a stored procedure in the database and wait for it to finish
         if commit:
             self._connection.commit()
 
-    def execute_stmt(self, sqlStmt: str, params: list = None, commit: bool = False, convert_blanks_to_nulls: bool = True, timeout_seconds: int = 100):
+    def execute_stmt(self, sqlStmt: str, params: list = None, commit: bool = False, convert_blanks_to_nulls: bool = True):
         """
 Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, and EXEC commands where no results are expected to be returned.
-        :param commit: Commits the changes in the database if True
         :param sqlStmt: The code to run
         :param params: Any parameters, substitute for question marks ('?') in the sqlStmt
-        :param timeout_seconds: The max number of seconds to wait for the statement to run
+        :param commit: Commits the changes in the database if True
+        :param convert_blanks_to_nulls: Specifies whether or not to convert blank strings to NULL when parameterizing
         """
         if params:
-            new_sql_stmt = ''
-            for i in range(len(sqlStmt)):
-                if sqlStmt[i] == '?':
-                    new_sql_stmt += '%s'
-                else:
-                    new_sql_stmt += sqlStmt[i]
+            new_sql_stmt = sqlStmt.replace('?', '%s')
         else:
             new_sql_stmt = sqlStmt
 
@@ -176,6 +172,8 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         else:
             # If we are not doing it 'fast', we will split it up into batches of commands
             for command_chunk in _chunker(statements, 100):
+                # statement =
+                # logging.info(f'SK.py->: Our SQL statement is: \n\n{statement}\n\n')
                 cursor.execute(';'.join(command_chunk))
 
         cursor.close()
@@ -218,6 +216,8 @@ class PreparedStatement:
                         if self._params[param_index] == '':
                             if self._blank_conversion:
                                 self._finished_sql_statement += 'NULL'
+                            else:
+                                self._finished_sql_statement += "''"
                         else:
                             self._finished_sql_statement += f"""'{self._params[param_index].replace("'", "''")}'"""
                     else:
