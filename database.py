@@ -27,9 +27,8 @@ class Row:
         self._listed_data[key][1] = value
         self._data = {t[0]: t[1] for t in self._listed_data}
 
-    @classmethod
-    def classiter(cls):
-        return iter(v for v in cls._data.values())
+    def __iter__(self):
+        return iter(v for v in self._data.values())
 
     def __len__(self):
         return len(self._data)
@@ -48,9 +47,8 @@ class Response:
         self._base_data: list = response
         self._rows = [Row(d) for d in self._base_data]
 
-    @classmethod
-    def classiter(cls):
-        return iter(cls._rows)
+    def __iter__(self):
+        return iter(self._rows)
 
     def __len__(self):
         return len(self._rows)
