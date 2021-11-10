@@ -68,7 +68,11 @@ def _chunker(seq: list, size: int):
 class Database:
 
     def __init__(self, server: str = DBHOST, port: int = 1433, database: str = DATABASE, username: str = DBUSER, password: str = DBPASSWD, charset='UTF-8'):
-        self._connection = pymssql.connect(server=server, user=username, password=password, database=database, charset=charset, port=port)
+        try:
+            self._connection = pymssql.connect(server=server, user=username, password=password, database=database, charset=charset, port=port)
+        except TypeError:
+            # This means that something was wrong with the credentials supplied
+            raise CredentialsError('Something was wrong with the credentials supplied. Check your environment variables or pass the creds directly.')
         self._cursor = self._connection.cursor(as_dict=True)
 
     def __enter__(self):
@@ -178,6 +182,10 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
 
 
 class ParameterMismatchError(Exception):
+    pass
+
+
+class CredentialsError(Exception):
     pass
 
 
