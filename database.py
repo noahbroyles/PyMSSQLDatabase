@@ -180,6 +180,9 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         self._connection.commit()
         self._connection.close()
 
+    def __del__(self):
+        self.close()
+
 
 class ParameterMismatchError(Exception):
     pass
