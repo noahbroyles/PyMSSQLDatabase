@@ -168,8 +168,6 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         else:
             # If we are not doing it 'fast', we will split it up into batches of commands
             for command_chunk in _chunker(statements, 100):
-                # statement =
-                # logging.info(f'SK.py->: Our SQL statement is: \n\n{statement}\n\n')
                 cursor.execute(';'.join(command_chunk))
 
         cursor.close()
