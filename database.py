@@ -198,10 +198,14 @@ class PreparedStatement:
     This class is very useful for debugging queries to see how they look with all their parameters in place. For huge SQL statements,
     performance is much slower than just executing the query with the params using Database.execute_stmt() or Database.query().
     """
-    def __init__(self, sql: str, params: list, convert_blanks_to_nulls: bool = True):
+        def __init__(self, sql: str, params: list, convert_blanks_to_nulls: bool = True):
         self._sql = sql
-        self._params = params
-        self._blank_conversion = convert_blanks_to_nulls
+
+        if convert_blanks_to_nulls:
+            self._params = [p if p != '' else None for p in params]
+        else:
+            self._params = params
+
         self._finished_sql_statement: str = ''
         self._prepare()
 
@@ -214,13 +218,9 @@ class PreparedStatement:
             for char in self._sql:
                 if char == '?':
                     if type(self._params[param_index]) == str:
-                        if self._params[param_index] == '':
-                            if self._blank_conversion:
-                                self._finished_sql_statement += 'NULL'
-                            else:
-                                self._finished_sql_statement += "''"
-                        else:
-                            self._finished_sql_statement += f"""'{self._params[param_index].replace("'", "''")}'"""
+                        self._finished_sql_statement += f"""'{self._params[param_index].replace("'", "''")}'"""
+                    elif self._params[param_index] is None:
+                        self._finished_sql_statement += 'NULL'
                     else:
                         self._finished_sql_statement += str(self._params[param_index])
                     param_index += 1
