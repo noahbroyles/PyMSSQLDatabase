@@ -198,7 +198,7 @@ class PreparedStatement:
     This class is very useful for debugging queries to see how they look with all their parameters in place. For huge SQL statements,
     performance is much slower than just executing the query with the params using Database.execute_stmt() or Database.query().
     """
-        def __init__(self, sql: str, params: list, convert_blanks_to_nulls: bool = True):
+    def __init__(self, sql: str, params: list, convert_blanks_to_nulls: bool = True):
         self._sql = sql
 
         if convert_blanks_to_nulls:
