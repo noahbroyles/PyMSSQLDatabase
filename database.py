@@ -205,6 +205,15 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         if commit:
             self._connection.commit()
 
+    def get_proc_code(self, stored_procedure: str) -> str:
+        """
+        Returns the contents of a stored procedure. Just like "script as" in SSMS.
+        :param stored_procedure: The name of the stored procedure to get the contents of
+        """
+        lines = [r.Text for r in self.query('EXEC sp_HelpText ?', params=[stored_procedure])]
+        sql = ''.join(lines)
+        return sql
+
     def close(self):
         self._connection.commit()
         self._connection.close()
