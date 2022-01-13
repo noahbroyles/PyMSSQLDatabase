@@ -1,5 +1,6 @@
 import os
 import time
+import secsie
 import pymssql
 
 
@@ -67,7 +68,37 @@ def _chunker(seq: list, size: int):
 
 class Database:
 
-    def __init__(self, server: str = DBHOST, port: int = 1433, database: str = DATABASE, username: str = DBUSER, password: str = DBPASSWD, charset='UTF-8'):
+    def __init__(self, server: str = DBHOST, port: int = 1433, database: str = DATABASE, username: str = DBUSER, password: str = DBPASSWD, charset='UTF-8', connection_conf_file: str = None, connection_name: str = 'connection'):
+        """
+Creates a Database object connected to the specified database.
+        :param server: The server address to use
+        :param port: The port to connect to. Default for MSSQL is 1433
+        :param database: The database name to USE
+        :param username: The username to login to the database with
+        :param password: The password to login with
+        :param charset: The charset to use for the connection
+        :param connection_conf_file: A path to a secsie connection configuration file. If passed, all parameters declared in the file will override default parameters
+
+        connection_conf_file syntax:
+        [connection_name]
+            server = www.hostdatabase.com
+            username = uname
+            password = pdub
+            database = dbname
+        """
+        if connection_conf_file is not None:
+            # If there is a config file specified, read it and connect from it
+            config = secsie.parse_config_file(connection_conf_file)[connection_name]
+            server = config['server']
+            database = config['database']
+            if config.get('username'):
+                username = config['username']
+            if config.get('password'):
+                password = config['password']
+            if config.get('port'):
+                port = config['port']
+            if config.get('charset'):
+                charset = config['charset']
         try:
             self._connection = pymssql.connect(server=server, user=username, password=password, database=database, charset=charset, port=port)
         except TypeError:
@@ -178,9 +209,6 @@ Parameterizes statement and runs in the database. Use for INSERT, UPDATE, DROP, 
         self._connection.commit()
         self._connection.close()
 
-    def __del__(self):
-        self.close()
-
 
 class ParameterMismatchError(Exception):
     pass
@@ -200,8 +228,12 @@ class PreparedStatement:
     """
     def __init__(self, sql: str, params: list, convert_blanks_to_nulls: bool = True):
         self._sql = sql
-        self._params = params
-        self._blank_conversion = convert_blanks_to_nulls
+
+        if convert_blanks_to_nulls:
+            self._params = [p if p != '' else None for p in params]
+        else:
+            self._params = params
+
         self._finished_sql_statement: str = ''
         self._prepare()
 
@@ -214,13 +246,9 @@ class PreparedStatement:
             for char in self._sql:
                 if char == '?':
                     if type(self._params[param_index]) == str:
-                        if self._params[param_index] == '':
-                            if self._blank_conversion:
-                                self._finished_sql_statement += 'NULL'
-                            else:
-                                self._finished_sql_statement += "''"
-                        else:
-                            self._finished_sql_statement += f"""'{self._params[param_index].replace("'", "''")}'"""
+                        self._finished_sql_statement += f"""'{self._params[param_index].replace("'", "''")}'"""
+                    elif self._params[param_index] is None:
+                        self._finished_sql_statement += 'NULL'
                     else:
                         self._finished_sql_statement += str(self._params[param_index])
                     param_index += 1
